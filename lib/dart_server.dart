@@ -53,6 +53,7 @@ class Server {
         Map<String, dynamic> jsonMap = jsonDecode(response.data);
         var meettingData = jsonMap["nekcaiymatialqlxr"][1]['row'];
         if (meettingData != null) {
+          print(meettingData);
           for (var data in meettingData) {
             meettings.add(data);
           }
