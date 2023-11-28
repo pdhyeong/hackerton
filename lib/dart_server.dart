@@ -33,7 +33,7 @@ class Server {
     // print('PDF에서 추출한 텍스트:\n$text');
   }
 
-  Future<void> getData() async {
+  Future<List<Map<String, dynamic>>> getData() async {
     const String apiUrl =
         'https://open.assembly.go.kr/portal/openapi/nekcaiymatialqlxr';
     final Map<String, dynamic> params = {
@@ -44,32 +44,18 @@ class Server {
 
     // HTTP 응답의 body에서 HTML 데이터 추출
     Dio dio = Dio();
+    List<Map<String, dynamic>> meettings = [];
     try {
       final response = await dio.get(apiUrl, queryParameters: params);
       if (response.statusCode == 200) {
         // 서버로부터 데이터가 정상적으로 수신된 경우
         dynamic data = response.data;
         Map<String, dynamic> jsonMap = jsonDecode(response.data);
-        var ds = jsonMap["nekcaiymatialqlxr"][1]['row'];
-        List<Map<String, String>> rows = [];
-        if (ds != null) {
-          for (var rowData in ds) {
-            String meetingSession = rowData["MEETINGSESSION"];
-            String cha = rowData["CHA"];
-            String title = rowData["TITLE"];
-            String meettingTime = rowData["MEETTING_TIME"];
-            String meetingDate = rowData["MEETTING_DATE"];
-            String link = rowData["LINK_URL"];
-            String uniCd = rowData["UNIT_CD"];
-            String uniNm = rowData["UNIT_NM"];
-
-            String s =
-                '$meetingSession  $cha  $title $meetingDate  $meettingTime  $link  $uniCd  $uniNm';
-            // print(s);
-            print(s);
-            // rows.add(jmap);
+        var meettingData = jsonMap["nekcaiymatialqlxr"][1]['row'];
+        if (meettingData != null) {
+          for (var data in meettingData) {
+            meettings.add(data);
           }
-          // 데이터 처리 또는 상태 업데이트 등을 수행합니다.
         } else {
           // 서버로부터 오류 응답이 수신된 경우
           print('API 요청 실패 (GET): ${response.statusCode}');
@@ -79,6 +65,7 @@ class Server {
       // Dio에서 발생한 예외를 처리합니다.
       print('Dio 예외 (GET): $error');
     }
+    return meettings;
   }
 }
 

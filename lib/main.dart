@@ -1,5 +1,7 @@
-import 'package:hackerton/dart_server.dart';
 import 'package:flutter/material.dart';
+import 'package:hackerton/dart_server.dart';
+import 'package:hackerton/widgets/BottomNavi.dart';
+import 'package:hackerton/screen/home_screen.dart';
 
 void main() => runApp(const MyApp());
 
@@ -8,27 +10,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MyHomePage(),
+    return MaterialApp(
+      theme: ThemeData(useMaterial3: true),
+      home: const HomeScreen(),
     );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        body: Column(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: <Widget>[
-        TextButton(
-          onPressed: () {
-            server.getData();
-          },
-          child: const Text('GET'),
-        ),
-      ],
-    ));
   }
 }
