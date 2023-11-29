@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0x000fffff),
         title: Image.asset(
-          'assets/images/assembly.png',
+          'images/assembly.png',
           fit: BoxFit.cover,
           width: 77,
           height: 53,
