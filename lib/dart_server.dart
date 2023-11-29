@@ -2,8 +2,6 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:pdf/pdf.dart' as pdfLib;
-import 'package:pdf/widgets.dart' as pdfWidgets;
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as htmlParser;
@@ -12,27 +10,6 @@ import 'package:html/dom.dart' as htmlDom;
 const String apiKey = "5a129440bf2549fcb741806b0120a29c";
 
 class Server {
-  final String pdfUrl = 'https://example.com/sample.pdf'; // 실제 PDF URL로 변경
-
-  Future<void> downloadAndReadPdf() async {
-    // PDF 다운로드
-    final http.Response response = await http.get(Uri.parse(pdfUrl));
-    final Uint8List bytes = response.bodyBytes;
-
-    // 다운로드한 PDF로부터 텍스트 추출
-    // final pdfLib.PdfDocument pdfDoc = await pdfLib.PdfDocument.openData(bytes);
-    // final StringBuffer textBuffer = StringBuffer();
-
-    // for (int i = 0; i < pdfDoc.pages.length; i++) {
-    //   final pdfLib.PdfPage page = pdfDoc.pages[i];
-    //   final String pageText = await page.extractText();
-    //   textBuffer.write(pageText);
-    // }
-
-    // final String text = textBuffer.toString();
-    // print('PDF에서 추출한 텍스트:\n$text');
-  }
-
   Future<List<Map<String, dynamic>>> getData(
       String daeNum, String confDate) async {
     const String apiUrl =
