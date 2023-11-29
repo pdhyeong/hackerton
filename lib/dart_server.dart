@@ -33,13 +33,15 @@ class Server {
     // print('PDF에서 추출한 텍스트:\n$text');
   }
 
-  Future<List<Map<String, dynamic>>> getData() async {
+  Future<List<Map<String, dynamic>>> getData(
+      String daeNum, String confDate) async {
     const String apiUrl =
-        'https://open.assembly.go.kr/portal/openapi/nekcaiymatialqlxr';
+        'https://open.assembly.go.kr/portal/openapi/ngytonzwavydlbbha';
     final Map<String, dynamic> params = {
       'Type': 'json',
       'KEY': apiKey,
-      "UNIT_CD": "100021",
+      "DAE_NUM": daeNum,
+      "CONF_DATE": confDate,
     };
 
     // HTTP 응답의 body에서 HTML 데이터 추출
@@ -51,7 +53,7 @@ class Server {
         // 서버로부터 데이터가 정상적으로 수신된 경우
         dynamic data = response.data;
         Map<String, dynamic> jsonMap = jsonDecode(response.data);
-        var meettingData = jsonMap["nekcaiymatialqlxr"][1]['row'];
+        var meettingData = jsonMap["ngytonzwavydlbbha"][1]['row'];
         if (meettingData != null) {
           print(meettingData);
           for (var data in meettingData) {

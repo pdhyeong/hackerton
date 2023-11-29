@@ -12,15 +12,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late List<Map<String, dynamic>> meetings = [];
+  String selectedDaeNum = "21"; // Default value
+  String selectedConfDate = "2023"; // Default value
 
   @override
   void initState() {
     super.initState();
-    fetchData();
+    fetchData(selectedDaeNum, selectedConfDate);
   }
 
-  void fetchData() async {
-    List<Map<String, dynamic>> data = await server.getData();
+  void fetchData(String daeNum, String confDate) async {
+    List<Map<String, dynamic>> data = await server.getData(daeNum, confDate);
     setState(() {
       meetings = data;
     });
@@ -39,26 +41,91 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       bottomNavigationBar: const BottomNavigationBarExample(),
-      body: ListView.builder(
-        itemCount: meetings.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(meetings[index]['TITLE']),
-            subtitle: Text(meetings[index]['MEETTING_DATE']),
-            // 다른 필요한 정보들을 추가할 수 있습니다.
-            onTap: () {
-              // Navigate to the detail screen and pass the meeting data
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MeetingDetailScreen(
-                    meetingData: meetings[index],
-                  ),
-                ),
-              );
-            },
-          );
-        },
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Select DAE_NUM: "),
+              DropdownButton<String>(
+                value: selectedDaeNum,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedDaeNum = newValue!;
+                    fetchData(selectedDaeNum, selectedConfDate);
+                  });
+                },
+                items: <String>[
+                  "21",
+                  "20",
+                  "19",
+                  "18",
+                  "17",
+                  "16"
+                ] // Add your DAE_NUM options here
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Select CONF_DATE: "),
+              DropdownButton<String>(
+                value: selectedConfDate,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedConfDate = newValue!;
+                    fetchData(selectedDaeNum, selectedConfDate);
+                  });
+                },
+                items: <String>[
+                  "2023",
+                  "2022",
+                  "2021",
+                  "2020",
+                  "2019",
+                  "2018",
+                  "2017",
+                  "2016",
+                  "2015",
+                ] // Add your CONF_DATE options here
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: meetings.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(meetings[index]['TITLE']),
+                  subtitle: Text(meetings[index]['CONF_DATE']),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MeetingDetailScreen(
+                          meetingData: meetings[index],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
