@@ -147,8 +147,6 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Meeting Title: ${widget.meetingData['TITLE']}'),
-            Text('Meeting Date: ${widget.meetingData['MEETING_DATE']}'),
             if (isButtonVisible)
               ElevatedButton(
                 onPressed: () async {
