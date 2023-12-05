@@ -20,6 +20,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   String? summary;
   TextEditingController messageController = TextEditingController();
   String? chatResponse;
+  bool isSending = false; // Add a new boolean variable for the send button
 
   String extractPdfUrl(String pdfLink) {
     return pdfLink.replaceAll('uri=', '');
@@ -49,7 +50,6 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         final Map<String, dynamic> responseBody = json.decode(response.body);
         return responseBody['docId'];
       } else {
-        // Handle error responses (400, 401, etc.) if needed
         print('Failed to upload PDF. Status code: ${response.statusCode}');
         return null;
       }
@@ -58,7 +58,6 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         isUploading = false;
       });
 
-      // Handle network or other errors
       print('Error uploading PDF: $error');
       return null;
     }
@@ -79,18 +78,14 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         body: {'docId': docId, 'language': 'korean'},
       );
 
-      setState(() {
-        isSummarizing = false;
-      });
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
         final summaryText = responseBody['content'];
         setState(() {
           summary = summaryText;
+          isSummarizing = false;
         });
       } else {
-        // Handle error responses (400, 401, etc.) if needed
         print('Failed to get PDF summary. Status code: ${response.statusCode}');
       }
     } catch (error) {
@@ -98,7 +93,6 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         isSummarizing = false;
       });
 
-      // Handle network or other errors
       print('Error getting PDF summary: $error');
     }
   }
@@ -114,9 +108,8 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
         body: {
           'docId': docId,
           'message': message,
-          'save_chat':
-              'true', // Set to 'false' if you don't want to save chat history
-          'language': 'korean', // Set the desired language for the response
+          'save_chat': 'true',
+          'language': 'korean',
         },
       );
 
@@ -127,11 +120,9 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
           chatResponse = content;
         });
       } else {
-        // Handle error responses (400, 401, etc.) if needed
         print('Failed to chat with PDF. Status code: ${response.statusCode}');
       }
     } catch (error) {
-      // Handle network or other errors
       print('Error chatting with PDF: $error');
     }
   }
@@ -148,26 +139,33 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (isButtonVisible)
-              ElevatedButton(
-                onPressed: () async {
-                  final pdfLink = widget.meetingData['PDF_LINK_URL'];
-                  final pdfUrl = extractPdfUrl(pdfLink);
-                  final uploadedDocId = await uploadPdfAndGetDocId(pdfUrl);
-                  if (uploadedDocId != null) {
-                    setState(() {
-                      docId = uploadedDocId;
-                    });
-                    // Now that we have the docId, let's get the summary
-                    await getSummary(uploadedDocId);
-                  } else {
-                    // Handle the case where the PDF upload fails
-                    print('Failed to upload PDF');
-                  }
-                },
-                child: const Text('Upload PDF'),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final pdfLink = widget.meetingData['PDF_LINK_URL'];
+                    final pdfUrl = extractPdfUrl(pdfLink);
+                    final uploadedDocId = await uploadPdfAndGetDocId(pdfUrl);
+                    if (uploadedDocId != null) {
+                      setState(() {
+                        docId = uploadedDocId;
+                        isButtonVisible = false;
+                      });
+                      await getSummary(uploadedDocId);
+                    } else {
+                      print('Failed to upload PDF');
+                    }
+                  },
+                  child: const Text('요약 정보 보기'),
+                ),
               ),
-            if (isUploading) // Show loading indicator during upload
-              const CircularProgressIndicator(),
+            if (isUploading)
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
+            if (isSummarizing)
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
             if (summary != null)
               Container(
                 margin: const EdgeInsets.symmetric(vertical: 16),
@@ -187,7 +185,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                   ],
                 ),
               ),
-            if (summary != null) // Only show chat input if summary is available
+            if (summary != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -203,12 +201,22 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () async {
-                      final message = messageController.text.trim();
-                      if (message.isNotEmpty) {
-                        await chatWithPdf(docId!, message);
-                      }
-                    },
+                    onPressed: isSending
+                        ? null
+                        : () async {
+                            final message = messageController.text.trim();
+                            if (message.isNotEmpty) {
+                              setState(() {
+                                isSending = true;
+                              });
+
+                              await chatWithPdf(docId!, message);
+
+                              setState(() {
+                                isSending = false;
+                              });
+                            }
+                          },
                     child: const Text('Send'),
                   ),
                   if (chatResponse != null)
@@ -232,7 +240,6 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                     ),
                 ],
               ),
-            // Add other details as needed
           ],
         ),
       ),
