@@ -20,7 +20,7 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   String? summary;
   TextEditingController messageController = TextEditingController();
   String? chatResponse;
-  bool isSending = false; // Add a new boolean variable for the send button
+  bool isSending = false; 
 
   String extractPdfUrl(String pdfLink) {
     return pdfLink.replaceAll('uri=', '');
@@ -201,23 +201,26 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: isSending
-                        ? null
-                        : () async {
-                            final message = messageController.text.trim();
-                            if (message.isNotEmpty) {
-                              setState(() {
-                                isSending = true;
-                              });
+                    onPressed: () async {
+                      final message = messageController.text.trim();
+                      if (message.isNotEmpty) {
+                        setState(() {
+                          isSending = true;
+                        });
 
-                              await chatWithPdf(docId!, message);
+                        await chatWithPdf(docId!, message);
 
-                              setState(() {
-                                isSending = false;
-                              });
-                            }
-                          },
-                    child: const Text('Send'),
+                        setState(() {
+                          isSending = false;
+                        });
+                      }
+                    }, // Update button text dynamically
+                    style: ElevatedButton.styleFrom(
+                      // Disable the button when in "waiting" state
+                      foregroundColor: isSending ? Colors.white : null,
+                      backgroundColor: isSending ? Colors.grey : null,
+                    ),
+                    child: Text(isSending ? 'Wait' : 'Send'),
                   ),
                   if (chatResponse != null)
                     Container(
