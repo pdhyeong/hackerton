@@ -20,10 +20,16 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
   String? summary;
   TextEditingController messageController = TextEditingController();
   String? chatResponse;
-  bool isSending = false; 
+  bool isSending = false;
 
   String extractPdfUrl(String pdfLink) {
     return pdfLink.replaceAll('uri=', '');
+  }
+
+  String changeDetail(String originString) {
+    String replaceString =
+        originString.replaceAll(RegExp(r'씈산안', caseSensitive: false), '예산안');
+    return replaceString;
   }
 
   Future<String?> uploadPdfAndGetDocId(String pdfUrl) async {
@@ -133,117 +139,119 @@ class _MeetingDetailScreenState extends State<MeetingDetailScreen> {
       appBar: AppBar(
         title: Text(widget.meetingData['TITLE']),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (isButtonVisible)
-              Center(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final pdfLink = widget.meetingData['PDF_LINK_URL'];
-                    final pdfUrl = extractPdfUrl(pdfLink);
-                    final uploadedDocId = await uploadPdfAndGetDocId(pdfUrl);
-                    if (uploadedDocId != null) {
-                      setState(() {
-                        docId = uploadedDocId;
-                        isButtonVisible = false;
-                      });
-                      await getSummary(uploadedDocId);
-                    } else {
-                      print('Failed to upload PDF');
-                    }
-                  },
-                  child: const Text('요약 정보 보기'),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (isButtonVisible)
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final pdfLink = widget.meetingData['PDF_LINK_URL'];
+                      final pdfUrl = extractPdfUrl(pdfLink);
+                      final uploadedDocId = await uploadPdfAndGetDocId(pdfUrl);
+                      if (uploadedDocId != null) {
+                        setState(() {
+                          docId = uploadedDocId;
+                          isButtonVisible = false;
+                        });
+                        await getSummary(uploadedDocId);
+                      } else {
+                        print('Failed to upload PDF');
+                      }
+                    },
+                    child: const Text('요약 정보 보기'),
+                  ),
                 ),
-              ),
-            if (isUploading)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
-            if (isSummarizing)
-              const Center(
-                child: CircularProgressIndicator(),
-              ),
-            if (summary != null)
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
+              if (isUploading)
+                const Center(
+                  child: CircularProgressIndicator(),
                 ),
-                child: Column(
+              if (isSummarizing)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              if (summary != null)
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Summary:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(changeDetail(summary!)),
+                    ],
+                  ),
+                ),
+              if (summary != null)
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 16),
                     const Text(
-                      'Summary:',
+                      'Chat with PDF:',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(summary!),
+                    TextField(
+                      controller: messageController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter your question...',
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final message = messageController.text.trim();
+                        if (message.isNotEmpty) {
+                          setState(() {
+                            isSending = true;
+                          });
+
+                          await chatWithPdf(docId!, message);
+
+                          setState(() {
+                            isSending = false;
+                          });
+                        }
+                      }, // Update button text dynamically
+                      style: ElevatedButton.styleFrom(
+                        // Disable the button when in "waiting" state
+                        foregroundColor: isSending ? Colors.white : null,
+                        backgroundColor: isSending ? Colors.grey : null,
+                      ),
+                      child: Text(isSending ? 'Wait' : 'Send'),
+                    ),
+                    if (chatResponse != null)
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Chat Response:',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(changeDetail(chatResponse!)),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
-              ),
-            if (summary != null)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Chat with PDF:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  TextField(
-                    controller: messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your question...',
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final message = messageController.text.trim();
-                      if (message.isNotEmpty) {
-                        setState(() {
-                          isSending = true;
-                        });
-
-                        await chatWithPdf(docId!, message);
-
-                        setState(() {
-                          isSending = false;
-                        });
-                      }
-                    }, // Update button text dynamically
-                    style: ElevatedButton.styleFrom(
-                      // Disable the button when in "waiting" state
-                      foregroundColor: isSending ? Colors.white : null,
-                      backgroundColor: isSending ? Colors.grey : null,
-                    ),
-                    child: Text(isSending ? 'Wait' : 'Send'),
-                  ),
-                  if (chatResponse != null)
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 16),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Chat Response:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(chatResponse!),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
